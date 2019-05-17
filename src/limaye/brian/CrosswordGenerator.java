@@ -15,7 +15,7 @@ public class CrosswordGenerator {
 			{ ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ' } };
 
 	private char[][] grid = null;
-	private boolean showRandom = true;
+	private boolean showRandom = false;
 	private boolean overLap = true;
 	private List<Integer> possiblePos;
 
@@ -31,7 +31,7 @@ public class CrosswordGenerator {
 
 		List<String> wordList = convertToList(words);
 		Collections.sort(wordList);
-
+		
 		String[] newWords = (String[]) wordList.toArray();
 		String direction = "";
 
