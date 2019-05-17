@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
-import javax.swing.DefaultListSelectionModel;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -34,6 +33,7 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 
@@ -41,7 +41,7 @@ public class CrosswordGUI {
 
 	private final CrosswordGUIPanel crosswordPanel = new CrosswordGUIPanel();
 	private final JButton refreshButton = new JButton("Refresh");
-	private final JList fittedWordsList = new JList();
+	private final JList<String> fittedWordsList = new JList<String>();
 
 	public void solve() {
 
@@ -72,9 +72,10 @@ public class CrosswordGUI {
 	}
 
 	public void setWordsInTextArea(final String[] words) {
-		fittedWordsList.setSelectionModel(new DisabledItemSelectionModel());
+		fittedWordsList.setEnabled(false);
+		fittedWordsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
-		final DefaultListModel listModel = new DefaultListModel();
+		final DefaultListModel<String> listModel = new DefaultListModel<String>();
 		for (int i = 0; i < words.length; i++) {
 			listModel.addElement(words[i]);
 		}
@@ -98,16 +99,20 @@ public class CrosswordGUI {
 
 	public void initGUIElements() {
 		try {
-			final String[] words = new String[5];
+			final List<String> wordsList = new ArrayList<String>();
 
 			final RandomDict dict = RandomDict.load("/usr/share/dict/words");
 
-			for (int i = 0; i < words.length; i++) {
-				words[i] = dict.nextWord();
+			for (int i = 0; i < 5; i++) {
+
+				String nextWord = dict.nextWord();
+				if (!wordsList.contains(nextWord)) {
+					wordsList.add(nextWord);
+				}
 			}
 
 			final CrosswordGenerator crosswordGenerator = new CrosswordGenerator();
-			final List<String> fittedWords = crosswordGenerator.generate(words);
+			final List<String> fittedWords = crosswordGenerator.generate(wordsList.toArray(new String[0]));
 
 			setWordsInTextArea(fittedWords.toArray(new String[0]));
 
@@ -169,7 +174,7 @@ public class CrosswordGUI {
 											final Font newFont = new Font(attributes);
 											tf.setFont(newFont);
 
-											removeFromList(selectionList, tf.getText());
+											removeFromList(selectionList, tf.getText());											
 
 										} else {
 											tf.setBorder(HIGHLIGHTED_BORDER);
@@ -185,6 +190,9 @@ public class CrosswordGUI {
 											System.out.println("Sorted Words are: " + sortedWordsList);
 											if (sortedWordsList.contains(selection)) {
 												System.out.println("Found!");
+												setSelectionInList(selection);
+												selectionList.clear();
+
 											}
 
 										}
@@ -203,6 +211,27 @@ public class CrosswordGUI {
 			}
 			repaintParent(this);
 			repaint();
+		}
+		
+		protected void setSelectionInList(final String selection)
+		{
+			final DefaultListModel<String> listModel = (DefaultListModel<String>) fittedWordsList.getModel();
+			final int size = listModel.getSize();
+			for (int i=0; i < size; i++)
+			{
+				final String element = (String) listModel.getElementAt(i);
+				final char[] chars = element.toCharArray();
+				Arrays.sort(chars);
+				
+				final String sortedElement = String.valueOf(chars);
+				if (sortedElement.equals(selection))
+				{
+					System.out.println("FOUND AGAIN!");
+					fittedWordsList.setSelectedIndex(i);
+					return;
+				}
+			
+			}
 		}
 
 		protected void addToList(final List list, final String value) {
@@ -327,14 +356,6 @@ public class CrosswordGUI {
 
 		public String nextWord() {
 			return words[random.nextInt(words.length)];
-		}
-	}
-
-	class DisabledItemSelectionModel extends DefaultListSelectionModel {
-
-		@Override
-		public void setSelectionInterval(int index0, int index1) {
-			super.setSelectionInterval(-1, -1);
 		}
 	}
 }
