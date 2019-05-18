@@ -144,6 +144,7 @@ public class CrosswordGUI {
 			textFields = new JTextField[w][h];
 
 			final List<String> selectionList = new ArrayList<String>();
+			final List<Coordinates2D> selectedCoordinates2D = new ArrayList<Coordinates2D>();
 
 			final List<String> sortedWordsList = toSortedList(words);
 
@@ -174,13 +175,17 @@ public class CrosswordGUI {
 											final Font newFont = new Font(attributes);
 											tf.setFont(newFont);
 
-											removeFromList(selectionList, tf.getText());											
+											removeFromList(selectionList, tf.getText());
 
 										} else {
 											tf.setBorder(HIGHLIGHTED_BORDER);
 											attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
 											final Font newFont = new Font(attributes);
 											tf.setFont(newFont);
+
+											if (selectionList.isEmpty()) {
+												System.out.println("Empty!");
+											}
 
 											addToList(selectionList, tf.getText());
 
@@ -212,25 +217,28 @@ public class CrosswordGUI {
 			repaintParent(this);
 			repaint();
 		}
-		
-		protected void setSelectionInList(final String selection)
-		{
+
+		protected void setSelectionInList(final String selection) {
 			final DefaultListModel<String> listModel = (DefaultListModel<String>) fittedWordsList.getModel();
 			final int size = listModel.getSize();
-			for (int i=0; i < size; i++)
-			{
+			for (int i = 0; i < size; i++) {
 				final String element = (String) listModel.getElementAt(i);
 				final char[] chars = element.toCharArray();
 				Arrays.sort(chars);
-				
+
 				final String sortedElement = String.valueOf(chars);
-				if (sortedElement.equals(selection))
-				{
+				if (sortedElement.equals(selection)) {
 					System.out.println("FOUND AGAIN!");
-					fittedWordsList.setSelectedIndex(i);
+					int[] selectedIndices = fittedWordsList.getSelectedIndices();
+					int[] newSelectedIndices = new int[selectedIndices.length + 1];
+					if (selectedIndices.length > 0) {
+						System.arraycopy(selectedIndices, 0, newSelectedIndices, 0, selectedIndices.length);
+					}
+					newSelectedIndices[newSelectedIndices.length - 1] = i;
+					fittedWordsList.setSelectedIndices(newSelectedIndices);
 					return;
 				}
-			
+
 			}
 		}
 
