@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +45,7 @@ public class CrosswordGUI {
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JList<String> fittedWordsList = new JList<String>();
 
-	public void solve() {
+	public void play() {
 
 		final JFrame frame = new JFrame();
 
@@ -66,6 +68,7 @@ public class CrosswordGUI {
 
 		initGUIElements();
 
+		frame.setTitle("Crossword Puzzle - by Brian Limaye - v0.1");
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
@@ -126,7 +129,7 @@ public class CrosswordGUI {
 
 	public static void main(final String argv[]) throws Throwable {
 		final CrosswordGUI crosswordGUI = new CrosswordGUI();
-		crosswordGUI.solve();
+		crosswordGUI.play();
 
 	}
 
@@ -144,7 +147,8 @@ public class CrosswordGUI {
 			textFields = new JTextField[w][h];
 
 			final List<String> selectionList = new ArrayList<String>();
-			final List<Coordinates2D> selectedCoordinates2D = new ArrayList<Coordinates2D>();
+
+			final Map<String, JTextField> foundTextFields = new HashMap<String, JTextField>();
 
 			final List<String> sortedWordsList = toSortedList(words);
 
@@ -153,6 +157,7 @@ public class CrosswordGUI {
 					char c = array[x][y];
 					if (c != 0) {
 						textFields[x][y] = new JTextField(String.valueOf(c));
+						textFields[x][y].putClientProperty("Coordinates2D", new Coordinates2D(y, x));
 						textFields[x][y].setEditable(false);
 						final Border defaultBorder = textFields[x][y].getBorder();
 
@@ -164,6 +169,14 @@ public class CrosswordGUI {
 									final Object source = e.getSource();
 									if (source instanceof JTextField) {
 										final JTextField tf = (JTextField) source;
+										final Object isFound = tf.getClientProperty("Found");
+										final Coordinates2D coordinates2D = (Coordinates2D) tf
+												.getClientProperty("Coordinates2D");
+										System.out.println(coordinates2D);
+										if (isFound != null) {
+											return;
+										}
+										final String tfKey = String.valueOf(tf.hashCode());
 										final Border border = tf.getBorder();
 
 										final Font font = tf.getFont();
@@ -176,6 +189,7 @@ public class CrosswordGUI {
 											tf.setFont(newFont);
 
 											removeFromList(selectionList, tf.getText());
+											foundTextFields.remove(tfKey);
 
 										} else {
 											tf.setBorder(HIGHLIGHTED_BORDER);
@@ -188,6 +202,7 @@ public class CrosswordGUI {
 											}
 
 											addToList(selectionList, tf.getText());
+											foundTextFields.put(tfKey, tf);
 
 											final String selection = selectionList.stream().map(String::valueOf)
 													.collect(Collectors.joining());
@@ -197,6 +212,15 @@ public class CrosswordGUI {
 												System.out.println("Found!");
 												setSelectionInList(selection);
 												selectionList.clear();
+
+												final Iterator<String> tfKeys = foundTextFields.keySet().iterator();
+												while (tfKeys.hasNext()) {
+													final String key = tfKeys.next();
+													final JTextField value = (JTextField) foundTextFields.get(key);
+													value.putClientProperty("Found", "True");
+												}
+
+												foundTextFields.clear();
 
 											}
 
