@@ -68,7 +68,7 @@ public class CrosswordGUI {
 
 		initGUIElements();
 
-		frame.setTitle("Crossword Puzzle - by Brian Limaye - v0.1");
+		frame.setTitle("Crossword Puzzle v0.1 - by Brian Limaye");
 		frame.pack();
 		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
