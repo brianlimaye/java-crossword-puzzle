@@ -2,40 +2,45 @@ package limaye.brian;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class CrossWordSolver {
 
-	private final Map<String, String> lookupMap = new HashMap<String, String>();
+	private static final Map<String, String> lookupMap = new HashMap<String, String>();
 
 	public static void main(String[] args) {
 		CrosswordGenerator cw = new CrosswordGenerator();
+		Coordinates2D[] arr = {new Coordinates2D(0,0), new Coordinates2D(0,1), new Coordinates2D(0,2), new Coordinates2D(0,3), new Coordinates2D(0,4), new Coordinates2D(0,5)}; 
 		CrossWordSolver cs = new CrossWordSolver();
 		List<String> list = new ArrayList<String>();
 		String[] fittedWords = new String[list.size()];
-		String[] words = { "Jelfkjaldfaf", "Ayanna", "Nick", "Yick", "Anna", "Kick", "KingKrule" };
+		String[] words = {"Jimbom", "Target", "Laldig", "Doggop", "Rainbo", "Troute", "Gazebo"};
 
-		for (int i = 1; i <= 10000; i++) {
+		for (int i = 1; i <= 1; i++) {
 			list = cw.generate(words);
-			fittedWords = (String[]) (list.toArray(new String[0]));
+			fittedWords = (list.toArray(new String[0]));
+			System.out.println(list);
 			char[][] grid = cw.getGrid();
-			boolean b = cs.findAllWords(grid, fittedWords);
+			boolean b = cs.solve(grid, fittedWords);
 			if (b == false) {
 				throw new Error("Case failed!!");
 			}
-			
-			System.out.println("Lookup map equals " + cs.lookupMap);
 		}
+	 
+		System.out.println();
+		System.out.println(cs.find(arr)); 
 	}
-	
-	public boolean findAllWords(char[][] grid, String[] words) {
+
+	public boolean solve(char[][] grid, String[] words) {
+		
 		List<Coordinates2D> allPositions = new ArrayList<Coordinates2D>();
+		String direction = "";
 		int wordsFound = 0;
 
 		mloop: for (int i = 0; i < words.length; i++) {
+			
 			String currentWord = words[i];
 			allPositions = posOfFirstChars(grid, currentWord);
 			loop: for (int k = 0; k < allPositions.size(); k++) {
@@ -49,10 +54,26 @@ public class CrossWordSolver {
 						&& (tryBackwardsVertical == false)) {
 					continue loop;
 				} else {
-					final String key = Coordinates2D.sortAndGenerateKey(allPositions);
-					final List<Coordinates2D> copy = new ArrayList<Coordinates2D>();
-					copy.addAll(allPositions);
-					lookupMap.put(key, currentWord);
+					
+					if(tryHoriz)
+					{
+						direction = "Horizontal";
+					}
+					
+					if(tryBackwardsHoriz)
+					{
+						direction = "Backwards Horizontal";
+					}
+					
+					if(tryVert)
+					{
+						direction = "Vertical";
+					}
+					if(tryBackwardsVertical)
+					{
+						direction = "Backwards Vertical";
+					}
+					generateAndAddKey(direction, curr, currentWord);
 					wordsFound++;
 					continue mloop;
 				}
@@ -63,12 +84,6 @@ public class CrossWordSolver {
 			return true;
 		}
 		return false;
-	}
-	
-	public String matches(List<Coordinates2D> list)
-	{
-		final String key = Coordinates2D.sortAndGenerateKey(list);
-		return lookupMap.get(key);
 	}
 
 	private List<Coordinates2D> posOfFirstChars(char[][] grid, String word) {
@@ -99,7 +114,7 @@ public class CrossWordSolver {
 		}
 
 		if (sb.toString().equals(word)) {
-			System.out.println(word.toUpperCase() + " was found horizontally!");
+			//System.out.println(word.toUpperCase() + " was found horizontally!");
 			return true;
 		}
 
@@ -120,7 +135,7 @@ public class CrossWordSolver {
 		}
 
 		if (sb.toString().equals(word)) {
-			System.out.println(word.toUpperCase() + " was found Backwards Horizontally!");
+			//System.out.println(word.toUpperCase() + " was found Backwards Horizontally!");
 			return true;
 		}
 
@@ -141,7 +156,7 @@ public class CrossWordSolver {
 		}
 
 		if (sb.toString().equals(word)) {
-			System.out.println(word.toUpperCase() + " was found Vertically!");
+			//System.out.println(word.toUpperCase() + " was found Vertically!");
 			return true;
 		}
 
@@ -162,10 +177,73 @@ public class CrossWordSolver {
 		}
 
 		if (sb.toString().equals(word)) {
-			System.out.println(word.toUpperCase() + " was found Backwards Vertically!");
+			//System.out.println(word.toUpperCase() + " was found Backwards Vertically!");
 			return true;
 		}
 		return false;
+	}
+	
+	private void generateAndAddKey(String direction, Coordinates2D startCoords, String word)
+	{
+		List<Coordinates2D> key = new ArrayList<Coordinates2D>();
+		key.add(startCoords);
+		int startRow = startCoords.getRow();
+		int startCol = startCoords.getColumn();
+		
+		if(direction.equals("Horizontal"))
+		{
+			for(int col=startCol + 1; col < startCol + word.length(); col++)
+			{
+				key.add(new Coordinates2D(startRow, col));
+			}		
+		}
+		
+		if(direction.equals("Backwards Horizontal"))
+		{
+			for(int col=startCol - 1; col > startCol - word.length(); col--)
+			{
+				key.add(new Coordinates2D(startRow, col));
+			}		
+		}
+		
+		if(direction.equals("Vertical"))
+		{
+			for(int row=startRow + 1; row < startCol + word.length(); row++)
+			{
+				key.add(new Coordinates2D(row, startCol));
+			}		
+		}
+		
+		if(direction.equals("Backwards Vertical"))
+		{
+			for(int row=startRow - 1; row > startRow - word.length(); row--)
+			{
+				key.add(new Coordinates2D(row, startCol));
+			}		
+		}
+		Coordinates2D.sortCoordinates(key);
+		String keyString = key.toString();
+		lookupMap.put(keyString, word);		
+	}
+	
+	public String find(Coordinates2D[] array)
+	{
+		List<Coordinates2D> list = Arrays.asList(array);
+		Coordinates2D.sortCoordinates(list);
+		String key = list.toString();
+		System.out.println("Key is: " + key);
+		System.out.println("Map is: " + lookupMap);
+		return lookupMap.get(key);
+	}
+	
+	public static Map<String, String> getMap()
+	{
+		return lookupMap;
+	}
+	
+	public void clear()
+	{
+		lookupMap.clear();
 	}
 
 }

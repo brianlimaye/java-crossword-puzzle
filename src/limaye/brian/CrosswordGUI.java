@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -44,6 +43,9 @@ public class CrosswordGUI {
 	private final CrosswordGUIPanel crosswordPanel = new CrosswordGUIPanel();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JList<String> fittedWordsList = new JList<String>();
+
+	// for crossword solver
+	private final CrossWordSolver crosswordSolver = new CrossWordSolver();
 
 	public void play() {
 
@@ -102,6 +104,9 @@ public class CrosswordGUI {
 
 	public void initGUIElements() {
 		try {
+			char[][] grid = null;
+			List<String> fittedWords = null;
+
 			final List<String> wordsList = new ArrayList<String>();
 
 			final RandomDict dict = RandomDict.load("/usr/share/dict/words");
@@ -115,12 +120,22 @@ public class CrosswordGUI {
 			}
 
 			final CrosswordGenerator crosswordGenerator = new CrosswordGenerator();
-			final List<String> fittedWords = crosswordGenerator.generate(wordsList.toArray(new String[0]));
+			fittedWords = crosswordGenerator.generate(wordsList.toArray(new String[0]));
+			String[] fittedWordsArray = fittedWords.toArray(new String[0]);
+
+			// first clear out the solver
+			crosswordSolver.clear();
+
+			// now store in instance variable for later...
+			grid = crosswordGenerator.getGrid();
+
+			// next solve the puzzle
+			crosswordSolver.solve(grid, fittedWordsArray);
 
 			setWordsInTextArea(fittedWords.toArray(new String[0]));
 
 			final char[][] crosswordArray = crosswordGenerator.getGrid();
-			crosswordPanel.setCrossword(crosswordArray, fittedWords.toArray(new String[0]));
+			crosswordPanel.setCrossword(crosswordArray, fittedWordsArray);
 		} catch (IOException io) {
 			showError(io);
 		}
@@ -146,18 +161,14 @@ public class CrosswordGUI {
 			setLayout(new GridLayout(w, h));
 			textFields = new JTextField[w][h];
 
-			final List<String> selectionList = new ArrayList<String>();
-
 			final Map<String, JTextField> foundTextFields = new HashMap<String, JTextField>();
-
-			final List<String> sortedWordsList = toSortedList(words);
 
 			for (int y = 0; y < h; y++) {
 				for (int x = 0; x < w; x++) {
 					char c = array[x][y];
 					if (c != 0) {
 						textFields[x][y] = new JTextField(String.valueOf(c));
-						textFields[x][y].putClientProperty("Coordinates2D", new Coordinates2D(y, x));
+						textFields[x][y].putClientProperty("Coordinates2D", new Coordinates2D(x, y));
 						textFields[x][y].setEditable(false);
 						final Border defaultBorder = textFields[x][y].getBorder();
 
@@ -172,7 +183,6 @@ public class CrosswordGUI {
 										final Object isFound = tf.getClientProperty("Found");
 										final Coordinates2D coordinates2D = (Coordinates2D) tf
 												.getClientProperty("Coordinates2D");
-										System.out.println(coordinates2D);
 										if (isFound != null) {
 											return;
 										}
@@ -188,7 +198,6 @@ public class CrosswordGUI {
 											final Font newFont = new Font(attributes);
 											tf.setFont(newFont);
 
-											removeFromList(selectionList, tf.getText());
 											foundTextFields.remove(tfKey);
 
 										} else {
@@ -197,31 +206,32 @@ public class CrosswordGUI {
 											final Font newFont = new Font(attributes);
 											tf.setFont(newFont);
 
-											if (selectionList.isEmpty()) {
-												System.out.println("Empty!");
-											}
-
-											addToList(selectionList, tf.getText());
 											foundTextFields.put(tfKey, tf);
 
-											final String selection = selectionList.stream().map(String::valueOf)
-													.collect(Collectors.joining());
-											System.out.println("Selection is: " + selection);
-											System.out.println("Sorted Words are: " + sortedWordsList);
-											if (sortedWordsList.contains(selection)) {
+											final List<Coordinates2D> list = new ArrayList<Coordinates2D>();
+											Iterator<String> tfKeys = foundTextFields.keySet().iterator();
+											while (tfKeys.hasNext()) {
+												final String key = tfKeys.next();
+												final JTextField value = (JTextField) foundTextFields.get(key);
+												final Object object = value.getClientProperty("Coordinates2D");
+												if (object instanceof Coordinates2D) {
+													final Coordinates2D foundObject = (Coordinates2D) object;
+													list.add(foundObject);
+												}
+											}
+											final String word = crosswordSolver
+													.find(list.toArray(new Coordinates2D[0]));
+											if (word != null) {
 												System.out.println("Found!");
-												setSelectionInList(selection);
-												selectionList.clear();
+												setSelectionInList(word);
 
-												final Iterator<String> tfKeys = foundTextFields.keySet().iterator();
+												tfKeys = foundTextFields.keySet().iterator();
 												while (tfKeys.hasNext()) {
 													final String key = tfKeys.next();
 													final JTextField value = (JTextField) foundTextFields.get(key);
 													value.putClientProperty("Found", "True");
 												}
-
 												foundTextFields.clear();
-
 											}
 
 										}
@@ -247,12 +257,7 @@ public class CrosswordGUI {
 			final int size = listModel.getSize();
 			for (int i = 0; i < size; i++) {
 				final String element = (String) listModel.getElementAt(i);
-				final char[] chars = element.toCharArray();
-				Arrays.sort(chars);
-
-				final String sortedElement = String.valueOf(chars);
-				if (sortedElement.equals(selection)) {
-					System.out.println("FOUND AGAIN!");
+				if (selection.equals(element)) {
 					int[] selectedIndices = fittedWordsList.getSelectedIndices();
 					int[] newSelectedIndices = new int[selectedIndices.length + 1];
 					if (selectedIndices.length > 0) {
@@ -264,21 +269,6 @@ public class CrosswordGUI {
 				}
 
 			}
-		}
-
-		protected void addToList(final List list, final String value) {
-			list.add(value);
-			Collections.sort(list);
-		}
-
-		protected void removeFromList(final List list, final String value) {
-			for (int i = 0; i < list.size(); i++) {
-				if (list.get(i).equals(value)) {
-					list.remove(i);
-					return;
-				}
-			}
-			Collections.sort(list);
 		}
 
 		protected char[][] copy(final char[][] array) {

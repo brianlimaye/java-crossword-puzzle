@@ -1,6 +1,6 @@
 package limaye.brian;
 
-import java.util.Arrays;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -27,7 +27,7 @@ public class Coordinates2D implements Comparable{
 	
 	public String toString()
 	{
-		return "(" + rowIndex + "," + " " + colIndex + ")" + ",";
+		return "(" + rowIndex + "," + " " + colIndex + ")";
 	}
 	
 	public boolean equals(Object o)
@@ -61,10 +61,10 @@ public class Coordinates2D implements Comparable{
 		throw new UnsupportedOperationException("Requires 2DCoordinates class!");
 	}
 	
-	public static String sortAndGenerateKey(List<Coordinates2D> coord)
+	@SuppressWarnings("unchecked")
+	public static void sortCoordinates(List<Coordinates2D> coord)
 	{
-		Collections.sort(coord);
-		return Arrays.toString(coord.toArray(new Coordinates2D[0]));	
+		Collections.sort(coord);	
 	}
 	
 	public static void main(String[] args)
@@ -77,13 +77,7 @@ public class Coordinates2D implements Comparable{
 		Coordinates2D c = new Coordinates2D(0, 1);
 		coordinates[2] = c;
 		Coordinates2D d = new Coordinates2D(5, 0);
-		coordinates[3] = d;
-		
-		System.out.println(Coordinates2D.sortAndGenerateKey(Arrays.asList(coordinates)));
-		
-		
-		
-		
+		coordinates[3] = d;	
 		
 	}
 }
