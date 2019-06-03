@@ -31,7 +31,7 @@ public class CrosswordGenerator {
 
 		List<String> wordList = convertToList(words);
 		Collections.sort(wordList);
-		
+
 		String[] newWords = (String[]) wordList.toArray();
 		String direction = "";
 

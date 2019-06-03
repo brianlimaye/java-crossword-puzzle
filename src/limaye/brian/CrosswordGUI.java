@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -15,7 +16,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import javax.sound.sampled.LineUnavailableException;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -58,6 +59,7 @@ public class CrosswordGUI {
 		toolsPanel.add(fittedWordsList);
 		toolsPanel.add(refreshButton);
 		refreshButton.addActionListener(new ActionListener() {
+			@Override
 			public void actionPerformed(ActionEvent ae) {
 				initGUIElements();
 			}
@@ -183,36 +185,24 @@ public class CrosswordGUI {
 										final Object isFound = tf.getClientProperty("Found");
 										final Coordinates2D coordinates2D = (Coordinates2D) tf
 												.getClientProperty("Coordinates2D");
-										if (isFound != null) {
-											return;
-										}
+
 										final String tfKey = String.valueOf(tf.hashCode());
 										final Border border = tf.getBorder();
 
-										final Font font = tf.getFont();
-										final Map attributes = font.getAttributes();
-
 										if (border.equals(HIGHLIGHTED_BORDER)) {
 											tf.setBorder(defaultBorder);
-											attributes.remove(TextAttribute.STRIKETHROUGH);
-											final Font newFont = new Font(attributes);
-											tf.setFont(newFont);
 
 											foundTextFields.remove(tfKey);
 
 										} else {
 											tf.setBorder(HIGHLIGHTED_BORDER);
-											attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
-											final Font newFont = new Font(attributes);
-											tf.setFont(newFont);
-
 											foundTextFields.put(tfKey, tf);
 
 											final List<Coordinates2D> list = new ArrayList<Coordinates2D>();
 											Iterator<String> tfKeys = foundTextFields.keySet().iterator();
 											while (tfKeys.hasNext()) {
 												final String key = tfKeys.next();
-												final JTextField value = (JTextField) foundTextFields.get(key);
+												final JTextField value = foundTextFields.get(key);
 												final Object object = value.getClientProperty("Coordinates2D");
 												if (object instanceof Coordinates2D) {
 													final Coordinates2D foundObject = (Coordinates2D) object;
@@ -222,13 +212,33 @@ public class CrosswordGUI {
 											final String word = crosswordSolver
 													.find(list.toArray(new Coordinates2D[0]));
 											if (word != null) {
-												System.out.println("Found!");
+												try {
+													SoundUtils.laser(5);
+												} catch (LineUnavailableException e1) {
+													// TODO Auto-generated catch block
+													e1.printStackTrace();
+												} catch (InterruptedException e1) {
+													// TODO Auto-generated catch block
+													e1.printStackTrace();
+												}
+
 												setSelectionInList(word);
 
 												tfKeys = foundTextFields.keySet().iterator();
 												while (tfKeys.hasNext()) {
 													final String key = tfKeys.next();
-													final JTextField value = (JTextField) foundTextFields.get(key);
+													final JTextField value = foundTextFields.get(key);
+													final Font font = value.getFont();
+													final Map attributes = font.getAttributes();
+													attributes.put(TextAttribute.STRIKETHROUGH,
+															TextAttribute.STRIKETHROUGH_ON);
+													final Font newFont = new Font(attributes);
+													value.setFont(newFont);
+
+													value.setForeground(Color.red);
+
+													value.setBorder(defaultBorder);
+
 													value.putClientProperty("Found", "True");
 												}
 												foundTextFields.clear();
@@ -256,7 +266,7 @@ public class CrosswordGUI {
 			final DefaultListModel<String> listModel = (DefaultListModel<String>) fittedWordsList.getModel();
 			final int size = listModel.getSize();
 			for (int i = 0; i < size; i++) {
-				final String element = (String) listModel.getElementAt(i);
+				final String element = listModel.getElementAt(i);
 				if (selection.equals(element)) {
 					int[] selectedIndices = fittedWordsList.getSelectedIndices();
 					int[] newSelectedIndices = new int[selectedIndices.length + 1];
@@ -269,38 +279,6 @@ public class CrosswordGUI {
 				}
 
 			}
-		}
-
-		protected char[][] copy(final char[][] array) {
-			if (array != null) {
-				final char[][] copy = new char[array.length][];
-
-				for (int i = 0; i < array.length; i++) {
-					final char[] row = array[i];
-
-					copy[i] = new char[row.length];
-					System.arraycopy(row, 0, copy[i], 0, row.length);
-				}
-
-				return copy;
-			}
-
-			return null;
-		}
-
-		protected List<String> toSortedList(final String[] words) {
-			final List<String> list = new ArrayList<String>();
-
-			for (int i = 0; i < words.length; i++) {
-				list.add(sort(words[i].toCharArray()));
-			}
-
-			return list;
-		}
-
-		protected String sort(final char[] arr) {
-			Arrays.sort(arr);
-			return new String(arr);
 		}
 
 		protected boolean isDefaultColor(final Color color) {
