@@ -61,7 +61,11 @@ public class CrosswordGUI {
 		refreshButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
-				initGUIElements();
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						initGUIElements();
+					}
+				});
 			}
 		});
 
@@ -105,6 +109,7 @@ public class CrosswordGUI {
 	}
 
 	public void initGUIElements() {
+
 		try {
 			char[][] grid = null;
 			List<String> fittedWords = null;
@@ -138,10 +143,10 @@ public class CrosswordGUI {
 
 			final char[][] crosswordArray = crosswordGenerator.getGrid();
 			crosswordPanel.setCrossword(crosswordArray, fittedWordsArray);
+
 		} catch (IOException io) {
 			showError(io);
 		}
-
 	}
 
 	public static void main(final String argv[]) throws Throwable {
@@ -198,51 +203,56 @@ public class CrosswordGUI {
 											tf.setBorder(HIGHLIGHTED_BORDER);
 											foundTextFields.put(tfKey, tf);
 
-											final List<Coordinates2D> list = new ArrayList<Coordinates2D>();
-											Iterator<String> tfKeys = foundTextFields.keySet().iterator();
-											while (tfKeys.hasNext()) {
-												final String key = tfKeys.next();
-												final JTextField value = foundTextFields.get(key);
-												final Object object = value.getClientProperty("Coordinates2D");
-												if (object instanceof Coordinates2D) {
-													final Coordinates2D foundObject = (Coordinates2D) object;
-													list.add(foundObject);
+											SwingUtilities.invokeLater(new Runnable() {
+												public void run() {
+
+													final List<Coordinates2D> list = new ArrayList<Coordinates2D>();
+													Iterator<String> tfKeys = foundTextFields.keySet().iterator();
+													while (tfKeys.hasNext()) {
+														final String key = tfKeys.next();
+														final JTextField value = foundTextFields.get(key);
+														final Object object = value.getClientProperty("Coordinates2D");
+														if (object instanceof Coordinates2D) {
+															final Coordinates2D foundObject = (Coordinates2D) object;
+															list.add(foundObject);
+														}
+													}
+													final String word = crosswordSolver
+															.find(list.toArray(new Coordinates2D[0]));
+													if (word != null) {
+														try {
+															SoundUtils.laser(5);
+														} catch (LineUnavailableException e1) {
+															// TODO Auto-generated catch block
+															e1.printStackTrace();
+														} catch (InterruptedException e1) {
+															// TODO Auto-generated catch block
+															e1.printStackTrace();
+														}
+
+														setSelectionInList(word);
+
+														tfKeys = foundTextFields.keySet().iterator();
+														while (tfKeys.hasNext()) {
+															final String key = tfKeys.next();
+															final JTextField value = foundTextFields.get(key);
+															final Font font = value.getFont();
+															final Map attributes = font.getAttributes();
+															attributes.put(TextAttribute.STRIKETHROUGH,
+																	TextAttribute.STRIKETHROUGH_ON);
+															final Font newFont = new Font(attributes);
+															value.setFont(newFont);
+
+															value.setForeground(Color.red);
+
+															value.setBorder(defaultBorder);
+
+															value.putClientProperty("Found", "True");
+														}
+														foundTextFields.clear();
+													}
 												}
-											}
-											final String word = crosswordSolver
-													.find(list.toArray(new Coordinates2D[0]));
-											if (word != null) {
-												try {
-													SoundUtils.laser(5);
-												} catch (LineUnavailableException e1) {
-													// TODO Auto-generated catch block
-													e1.printStackTrace();
-												} catch (InterruptedException e1) {
-													// TODO Auto-generated catch block
-													e1.printStackTrace();
-												}
-
-												setSelectionInList(word);
-
-												tfKeys = foundTextFields.keySet().iterator();
-												while (tfKeys.hasNext()) {
-													final String key = tfKeys.next();
-													final JTextField value = foundTextFields.get(key);
-													final Font font = value.getFont();
-													final Map attributes = font.getAttributes();
-													attributes.put(TextAttribute.STRIKETHROUGH,
-															TextAttribute.STRIKETHROUGH_ON);
-													final Font newFont = new Font(attributes);
-													value.setFont(newFont);
-
-													value.setForeground(Color.red);
-
-													value.setBorder(defaultBorder);
-
-													value.putClientProperty("Found", "True");
-												}
-												foundTextFields.clear();
-											}
+											});
 
 										}
 										repaintParent(tf);
