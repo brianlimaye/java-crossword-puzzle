@@ -4,8 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -37,11 +37,13 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 import javax.swing.border.Border;
 
 public class CrosswordGUI {
 
 	private final CrosswordGUIPanel crosswordPanel = new CrosswordGUIPanel();
+	private final TimerPanel timerPanel = new TimerPanel();
 	private final JButton refreshButton = new JButton("Refresh");
 	private final JList<String> fittedWordsList = new JList<String>();
 
@@ -55,7 +57,9 @@ public class CrosswordGUI {
 		frame.setLayout(new BorderLayout());
 
 		final JPanel toolsPanel = new JPanel();
-		toolsPanel.setLayout(new FlowLayout());
+		final FlowLayout flowLayout = new FlowLayout(FlowLayout.LEFT, 20, 10);
+		toolsPanel.setLayout(flowLayout);
+		toolsPanel.add(timerPanel);
 		toolsPanel.add(fittedWordsList);
 		toolsPanel.add(refreshButton);
 		refreshButton.addActionListener(new ActionListener() {
@@ -143,6 +147,8 @@ public class CrosswordGUI {
 
 			final char[][] crosswordArray = crosswordGenerator.getGrid();
 			crosswordPanel.setCrossword(crosswordArray, fittedWordsArray);
+			
+			timerPanel.init();
 
 		} catch (IOException io) {
 			showError(io);
@@ -152,6 +158,47 @@ public class CrosswordGUI {
 	public static void main(final String argv[]) throws Throwable {
 		final CrosswordGUI crosswordGUI = new CrosswordGUI();
 		crosswordGUI.play();
+
+	}
+
+	final class TimerPanel extends JPanel {
+		JLabel label;
+		Timer timer;
+		int count;
+
+		public TimerPanel() {
+			init();
+		}
+
+		public void init() {
+			removeAll();
+			stopTimer();
+			count = 0;
+			
+			label = new JLabel("Elapsed Time: ");
+			setLayout(new GridBagLayout());
+			add(label);
+			timer = new Timer(1000, new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					count++;
+					if (count < 100000) {
+						label.setText("Elapsed Time: " + Integer.toString(count) + " secs.");
+					} else {
+						((Timer) (e.getSource())).stop();
+					}
+				}
+			});
+			timer.setInitialDelay(0);
+			timer.start();
+		}
+
+		public void stopTimer() {
+			if (timer != null)
+			{
+				timer.stop();
+			}
+		}
 
 	}
 
@@ -226,8 +273,6 @@ public class CrosswordGUI {
 															.find(list.toArray(new Coordinates2D[0]));
 													if (word != null) {
 
-														setSelectionInList(word);
-
 														tfKeys = foundTextFields.keySet().iterator();
 														while (tfKeys.hasNext()) {
 															final String key = tfKeys.next();
@@ -257,6 +302,13 @@ public class CrosswordGUI {
 														}
 
 														foundTextFields.clear();
+														
+														if (setSelectionInList(word))
+														{
+															timerPanel.stopTimer();
+															return;
+														}
+														
 													}
 												}
 											});
@@ -279,8 +331,9 @@ public class CrosswordGUI {
 			repaint();
 		}
 
-		protected void setSelectionInList(final String selection) {
+		protected boolean setSelectionInList(final String selection) {
 			final DefaultListModel<String> listModel = (DefaultListModel<String>) fittedWordsList.getModel();
+		   			
 			final int size = listModel.getSize();
 			for (int i = 0; i < size; i++) {
 				final String element = listModel.getElementAt(i);
@@ -292,10 +345,19 @@ public class CrosswordGUI {
 					}
 					newSelectedIndices[newSelectedIndices.length - 1] = i;
 					fittedWordsList.setSelectedIndices(newSelectedIndices);
-					return;
+					
+					if (newSelectedIndices.length == listModel.getSize())
+					{
+						return true;
+					}
+					else
+					{
+						return false;
+					}
+					
 				}
-
 			}
+			return false;
 		}
 
 		protected void repaintParent(JComponent component) {
