@@ -205,7 +205,11 @@ public class CrosswordGUI {
 
 											SwingUtilities.invokeLater(new Runnable() {
 												public void run() {
+													checkIfFound(foundTextFields, defaultBorder);
+												}
 
+												private void checkIfFound(final Map<String, JTextField> foundTextFields,
+														final Border defaultBorder) {
 													final List<Coordinates2D> list = new ArrayList<Coordinates2D>();
 													Iterator<String> tfKeys = foundTextFields.keySet().iterator();
 													while (tfKeys.hasNext()) {
@@ -217,18 +221,10 @@ public class CrosswordGUI {
 															list.add(foundObject);
 														}
 													}
+
 													final String word = crosswordSolver
 															.find(list.toArray(new Coordinates2D[0]));
 													if (word != null) {
-														try {
-															SoundUtils.laser(5);
-														} catch (LineUnavailableException e1) {
-															// TODO Auto-generated catch block
-															e1.printStackTrace();
-														} catch (InterruptedException e1) {
-															// TODO Auto-generated catch block
-															e1.printStackTrace();
-														}
 
 														setSelectionInList(word);
 
@@ -249,6 +245,17 @@ public class CrosswordGUI {
 
 															value.putClientProperty("Found", "True");
 														}
+
+														try {
+															SoundUtils.laser(5);
+														} catch (LineUnavailableException e1) {
+															// TODO Auto-generated catch block
+															e1.printStackTrace();
+														} catch (InterruptedException e1) {
+															// TODO Auto-generated catch block
+															e1.printStackTrace();
+														}
+
 														foundTextFields.clear();
 													}
 												}
@@ -291,14 +298,6 @@ public class CrosswordGUI {
 			}
 		}
 
-		protected boolean isDefaultColor(final Color color) {
-			final int blue = color.getBlue();
-			final int green = color.getGreen();
-			final int red = color.getRed();
-
-			return blue == 255 && green == 255 && red == 255;
-		}
-
 		protected void repaintParent(JComponent component) {
 
 			// Get the parent of the component.
@@ -317,27 +316,6 @@ public class CrosswordGUI {
 
 		}
 
-		protected Color getDefaultColor() {
-			return new Color(255, 255, 255);
-		}
-
-		public char[][] getCrossword() {
-			int w = textFields.length;
-			int h = textFields[0].length;
-			char crossword[][] = new char[w][h];
-			for (int y = 0; y < h; y++) {
-				for (int x = 0; x < w; x++) {
-					if (textFields[x][y] != null) {
-						String s = textFields[x][y].getText();
-						if (s.length() > 0) {
-							crossword[x][y] = s.charAt(0);
-						}
-
-					}
-				}
-			}
-			return crossword;
-		}
 	}
 
 	static class RandomDict {
