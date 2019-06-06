@@ -12,15 +12,15 @@ public class CrossWordSolver {
 
 	public static void main(String[] args) {
 		CrosswordGenerator cw = new CrosswordGenerator();
-		Coordinates2D[] arr = { new Coordinates2D(0, 0), new Coordinates2D(0, 1), new Coordinates2D(0, 2),
-				new Coordinates2D(0, 3), new Coordinates2D(0, 4), new Coordinates2D(0, 5) };
 		CrossWordSolver cs = new CrossWordSolver();
 		List<String> list = new ArrayList<String>();
 		String[] fittedWords = new String[list.size()];
-		String[] words = { "Jimbom", "Target", "Laldig", "Doggop", "Rainbo", "Troute", "Gazebo" };
+		String[] words = { "1234567890", "Targetaiop", "Laldig", "Doggop", "Rainbo", "Troute", "Gazebo" };
 
-		for (int i = 1; i <= 1; i++) {
+		for (int i = 1; i <=100 ; i++) {
+			cs.clear();
 			list = cw.generate(words);
+			
 			fittedWords = (list.toArray(new String[0]));
 			System.out.println(list);
 			char[][] grid = cw.getGrid();
@@ -28,10 +28,9 @@ public class CrossWordSolver {
 			if (b == false) {
 				throw new Error("Case failed!!");
 			}
+			System.out.println();
+			System.out.println(lookupMap);
 		}
-
-		System.out.println();
-		System.out.println(cs.find(arr));
 	}
 
 	public boolean solve(char[][] grid, String[] words) {
@@ -193,19 +192,19 @@ public class CrossWordSolver {
 			}
 		}
 
-		if (direction.equals("Backwards Horizontal")) {
+		else if (direction.equals("Backwards Horizontal")) {
 			for (int col = startCol - 1; col > startCol - word.length(); col--) {
 				key.add(new Coordinates2D(startRow, col));
 			}
 		}
 
-		if (direction.equals("Vertical")) {
-			for (int row = startRow + 1; row < startCol + word.length(); row++) {
+		else if (direction.equals("Vertical")) {
+			for (int row = startRow + 1; row < startRow + word.length(); row++) {
 				key.add(new Coordinates2D(row, startCol));
 			}
 		}
 
-		if (direction.equals("Backwards Vertical")) {
+		else if (direction.equals("Backwards Vertical")) {
 			for (int row = startRow - 1; row > startRow - word.length(); row--) {
 				key.add(new Coordinates2D(row, startCol));
 			}
