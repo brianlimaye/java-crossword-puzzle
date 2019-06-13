@@ -17,7 +17,7 @@ public class CrossWordSolver {
 		String[] fittedWords = new String[list.size()];
 		String[] words = { "1234567890", "Targetaiop", "Laldig", "Doggop", "Rainbo", "Troute", "Gazebo" };
 
-		for (int i = 1; i <=100 ; i++) {
+		for (int i = 1; i <=1 ; i++) {
 			cs.clear();
 			list = cw.generate(words);
 			
@@ -49,9 +49,10 @@ public class CrossWordSolver {
 				boolean tryBackwardsHoriz = getBackwardsHoriz(curr, grid, currentWord);
 				boolean tryVert = getVertical(curr, grid, currentWord);
 				boolean tryBackwardsVertical = getBackwardsVertical(curr, grid, currentWord);
+				boolean tryDiagonal = getDiagonal(curr, grid, currentWord);
 
 				if ((tryHoriz == false) && (tryBackwardsHoriz == false) && (tryVert == false)
-						&& (tryBackwardsVertical == false)) {
+						&& (tryBackwardsVertical == false) && (tryDiagonal == false)) {
 					continue loop;
 				} else {
 
@@ -69,6 +70,12 @@ public class CrossWordSolver {
 					if (tryBackwardsVertical) {
 						direction = "Backwards Vertical";
 					}
+					
+					if(tryDiagonal)
+					{
+						direction = "Diagonal";
+					}
+					
 					generateAndAddKey(direction, curr, currentWord);
 					wordsFound++;
 					continue mloop;
@@ -179,6 +186,31 @@ public class CrossWordSolver {
 		}
 		return false;
 	}
+	
+	private boolean getDiagonal(Coordinates2D coord, char[][] grid, String word)
+	{
+		StringBuilder sb = new StringBuilder();
+		int row = coord.getRow();
+		int col = coord.getColumn();
+		
+		if((row + word.length() > grid[0].length) || (col + word.length() > grid.length))
+		{
+			return false;
+		}
+		
+		for(int i=row; i< row + word.length(); i++)
+		{
+			sb.append(grid[i][col]);
+			col++;
+		}
+		
+		if(sb.toString().equals(word))
+		{
+			System.out.println("Hi");
+			return true;
+		}
+		return false;
+	}
 
 	private void generateAndAddKey(String direction, Coordinates2D startCoords, String word) {
 		List<Coordinates2D> key = new ArrayList<Coordinates2D>();
@@ -207,6 +239,21 @@ public class CrossWordSolver {
 		else if (direction.equals("Backwards Vertical")) {
 			for (int row = startRow - 1; row > startRow - word.length(); row--) {
 				key.add(new Coordinates2D(row, startCol));
+			}
+		}
+		
+		else if (direction.equals("Diagonal"))
+		{
+			int row = startRow;
+			int col = startCol;
+			
+			row++;
+			col++;
+			for(int i=0; i< word.length() - 1; i++)
+			{
+				key.add(new Coordinates2D(row, col));
+				row++;
+				col++;
 			}
 		}
 		Coordinates2D.sortCoordinates(key);

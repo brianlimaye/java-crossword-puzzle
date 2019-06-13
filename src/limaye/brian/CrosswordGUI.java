@@ -6,17 +6,15 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.font.TextAttribute;
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -42,16 +40,18 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.Border;
+
 public class CrosswordGUI {
 
 	private CrosswordGUIPanel crosswordPanel = new CrosswordGUIPanel();
-	
+
 	private int currentCount = 0;
 	private static int highRecord = 0;
 	private final TimerPanel timerPanel = new TimerPanel();
 	private final JLabel score = new JLabel("Score: 0");
 	private final JLabel highScore = new JLabel("High Score: 0");
 	private final JButton refreshButton = new JButton("Refresh");
+	private final JLabel hintDisplay = new JLabel("                           ");
 	private final JList<String> fittedWordsList = new JList<String>();
 
 	// for crossword solver
@@ -72,7 +72,8 @@ public class CrosswordGUI {
 		toolsPanel.add(refreshButton);
 		toolsPanel.add(score);
 		toolsPanel.add(highScore);
-		
+		toolsPanel.add(hintDisplay);
+
 		refreshButton.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent ae) {
@@ -97,7 +98,7 @@ public class CrosswordGUI {
 		frame.setVisible(true);
 	}
 
-	public void setWordsInTextArea (String[] words) {
+	public void setWordsInTextArea(String[] words) {
 		fittedWordsList.setEnabled(false);
 		fittedWordsList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 
@@ -127,7 +128,7 @@ public class CrosswordGUI {
 
 		try {
 			currentCount = 0;
-			score.setText("Score: 0" );
+			score.setText("Score: 0");
 			char[][] grid = null;
 			List<String> fittedWords = null;
 
@@ -154,15 +155,14 @@ public class CrosswordGUI {
 			grid = crosswordGenerator.getGrid();
 
 			// next solve the puzzle
-			
+
 			crosswordSolver.solve(grid, fittedWordsArray);
-			
 
 			setWordsInTextArea(fittedWords.toArray(new String[0]));
 
 			char[][] crosswordArray = crosswordGenerator.getGrid();
 			crosswordPanel.setCrossword(crosswordArray, fittedWordsArray);
-			
+
 			timerPanel.init();
 
 		} catch (IOException io) {
@@ -189,7 +189,7 @@ public class CrosswordGUI {
 			removeAll();
 			stopTimer();
 			count = 0;
-			
+
 			label = new JLabel("Elapsed Time: ");
 			setLayout(new GridBagLayout());
 			add(label);
@@ -199,6 +199,16 @@ public class CrosswordGUI {
 					count++;
 					if (count < 100000) {
 						label.setText("Elapsed Time: " + Integer.toString(count) + " secs.");
+						if (count % 10 == 0) {
+							Toolkit.getDefaultToolkit().beep();
+							hintDisplay.setText("Need a hint? Press H.");
+							JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(TimerPanel.this);
+							if (topFrame != null)
+							{
+								topFrame.pack();
+							}
+
+						}
 					} else {
 						((Timer) (e.getSource())).stop();
 					}
@@ -209,8 +219,7 @@ public class CrosswordGUI {
 		}
 
 		public void stopTimer() {
-			if (timer != null)
-			{
+			if (timer != null) {
 				timer.stop();
 			}
 		}
@@ -248,13 +257,13 @@ public class CrosswordGUI {
 								if (e.getClickCount() == 1) {
 									final Object source = e.getSource();
 									if (source instanceof JTextField) {
-											JTextField tf = (JTextField) source;
-											Object isFound = tf.getClientProperty("Found");
-											Coordinates2D coordinates2D = (Coordinates2D) tf
+										JTextField tf = (JTextField) source;
+										Object isFound = tf.getClientProperty("Found");
+										Coordinates2D coordinates2D = (Coordinates2D) tf
 												.getClientProperty("Coordinates2D");
 
-											String tfKey = String.valueOf(tf.hashCode());
-											Border border = tf.getBorder();
+										String tfKey = String.valueOf(tf.hashCode());
+										Border border = tf.getBorder();
 
 										if (border.equals(HIGHLIGHTED_BORDER)) {
 											tf.setBorder(defaultBorder);
@@ -271,15 +280,15 @@ public class CrosswordGUI {
 												}
 
 												private void checkIfFound(final Map<String, JTextField> foundTextFields,
-															Border defaultBorder) {
-															List<Coordinates2D> list = new ArrayList<Coordinates2D>();
+														Border defaultBorder) {
+													List<Coordinates2D> list = new ArrayList<Coordinates2D>();
 													Iterator<String> tfKeys = foundTextFields.keySet().iterator();
 													while (tfKeys.hasNext()) {
-															String key = tfKeys.next();
-															JTextField value = foundTextFields.get(key);
-															Object object = value.getClientProperty("Coordinates2D");
+														String key = tfKeys.next();
+														JTextField value = foundTextFields.get(key);
+														Object object = value.getClientProperty("Coordinates2D");
 														if (object instanceof Coordinates2D) {
-																Coordinates2D foundObject = (Coordinates2D) object;
+															Coordinates2D foundObject = (Coordinates2D) object;
 															list.add(foundObject);
 														}
 													}
@@ -290,12 +299,12 @@ public class CrosswordGUI {
 
 														tfKeys = foundTextFields.keySet().iterator();
 														while (tfKeys.hasNext()) {
-								
-																String key = tfKeys.next();
-																JTextField value = foundTextFields.get(key);
-																Font font = value.getFont();
-																Map attributes = font.getAttributes();
-																attributes.put(TextAttribute.STRIKETHROUGH,
+
+															String key = tfKeys.next();
+															JTextField value = foundTextFields.get(key);
+															Font font = value.getFont();
+															Map attributes = font.getAttributes();
+															attributes.put(TextAttribute.STRIKETHROUGH,
 																	TextAttribute.STRIKETHROUGH_ON);
 															final Font newFont = new Font(attributes);
 															value.setFont(newFont);
@@ -308,12 +317,11 @@ public class CrosswordGUI {
 														}
 														currentCount += 10;
 														score.setText("Score: " + currentCount);
-														if(currentCount >= highRecord)
-														{
+														if (currentCount >= highRecord) {
 															highRecord = currentCount;
 														}
 														highScore.setText("High Score: " + highRecord);
-														
+
 														try {
 															SoundUtils.laser(5);
 														} catch (LineUnavailableException e1) {
@@ -325,13 +333,12 @@ public class CrosswordGUI {
 														}
 
 														foundTextFields.clear();
-														
-														if (setSelectionInList(word))
-														{
+
+														if (setSelectionInList(word)) {
 															timerPanel.stopTimer();
 															return;
 														}
-														
+
 													}
 												}
 											});
@@ -353,13 +360,13 @@ public class CrosswordGUI {
 			repaintParent(this);
 			repaint();
 		}
-		
+
 		protected boolean setSelectionInList(final String selection) {
 			final DefaultListModel<String> listModel = (DefaultListModel<String>) fittedWordsList.getModel();
-		   			
-				int size = listModel.getSize();
+
+			int size = listModel.getSize();
 			for (int i = 0; i < size; i++) {
-					String element = listModel.getElementAt(i);
+				String element = listModel.getElementAt(i);
 				if (selection.equals(element)) {
 					int[] selectedIndices = fittedWordsList.getSelectedIndices();
 					int[] newSelectedIndices = new int[selectedIndices.length + 1];
@@ -368,16 +375,13 @@ public class CrosswordGUI {
 					}
 					newSelectedIndices[newSelectedIndices.length - 1] = i;
 					fittedWordsList.setSelectedIndices(newSelectedIndices);
-					
-					if (newSelectedIndices.length == listModel.getSize())
-					{
+
+					if (newSelectedIndices.length == listModel.getSize()) {
 						return true;
-					}
-					else
-					{
+					} else {
 						return false;
 					}
-					
+
 				}
 			}
 			return false;
@@ -405,8 +409,8 @@ public class CrosswordGUI {
 
 	public static class RandomDict {
 		public static String[] NO_STRINGS = {};
-			Random random = new Random();
-			String[] words;
+		Random random = new Random();
+		String[] words;
 
 		private RandomDict(final String[] words) {
 			this.words = words;
@@ -431,9 +435,8 @@ public class CrosswordGUI {
 			return words[random.nextInt(words.length)];
 		}
 	}
-	
-	public int getPrevHighScore()
-	{
+
+	public int getPrevHighScore() {
 		return highRecord;
 	}
 }
