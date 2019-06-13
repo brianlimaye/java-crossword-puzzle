@@ -200,13 +200,13 @@ public class CrosswordGUI {
 					if (count < 100000) {
 						label.setText("Elapsed Time: " + Integer.toString(count) + " secs.");
 						if (count % 10 == 0) {
-							Toolkit.getDefaultToolkit().beep();
-							hintDisplay.setText("Need a hint? Press H.");
-							JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(TimerPanel.this);
-							if (topFrame != null)
-							{
-								topFrame.pack();
-							}
+							// Toolkit.getDefaultToolkit().beep();
+							// hintDisplay.setText("Need a hint? Press H.");
+							// JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(TimerPanel.this);
+							// if (topFrame != null)
+							// {
+							// topFrame.pack();
+							// }
 
 						}
 					} else {

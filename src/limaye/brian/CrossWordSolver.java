@@ -206,7 +206,6 @@ public class CrossWordSolver {
 		
 		if(sb.toString().equals(word))
 		{
-			System.out.println("Hi");
 			return true;
 		}
 		return false;
@@ -265,8 +264,8 @@ public class CrossWordSolver {
 		List<Coordinates2D> list = Arrays.asList(array);
 		Coordinates2D.sortCoordinates(list);
 		String key = list.toString();
-		System.out.println("Key is: " + key);
-		System.out.println("Map is: " + lookupMap);
+		//System.out.println("Key is: " + key);
+		//System.out.println("Map is: " + lookupMap);
 		return lookupMap.get(key);
 	}
 
