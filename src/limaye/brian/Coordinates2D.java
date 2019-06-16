@@ -3,7 +3,7 @@ package limaye.brian;
 import java.util.Collections;
 import java.util.List;
 
-public class Coordinates2D implements Comparable {
+public class Coordinates2D implements Comparable<Object> {
 
 	private int rowIndex;
 	private int colIndex;
@@ -54,7 +54,6 @@ public class Coordinates2D implements Comparable {
 		throw new UnsupportedOperationException("Requires 2DCoordinates class!");
 	}
 
-	@SuppressWarnings("unchecked")
 	public static void sortCoordinates(List<Coordinates2D> coord) {
 		Collections.sort(coord);
 	}

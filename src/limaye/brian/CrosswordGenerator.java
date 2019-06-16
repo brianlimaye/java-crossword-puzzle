@@ -272,6 +272,14 @@ public class CrosswordGenerator {
 			throw new Error("Incorrect Method Call.");
 		}
 		
+		
+		if (overLap == true) {
+			boolean success = overLapDiagonal(direction, words, pos);
+			if (success == true) {
+				return true;
+			}
+		}
+		
 		List<Coordinates2D> positions = new ArrayList<Coordinates2D>();
 		
 		String currentWord = words[pos];
@@ -548,16 +556,17 @@ public class CrosswordGenerator {
 
 				index = getNthRowIndex(k, test, currElement);
 				startPos = new Coordinates2D(row - index, col - index);
-				endPos = new Coordinates2D(startPos.getRow() + currElement.length() -1, startPos.getColumn() + currElement.length() - 1);
+				endPos = new Coordinates2D(startPos.getRow() + currElement.length(), startPos.getColumn() + currElement.length());
 				
 				if ((endPos.getColumn() > grid[0].length) || (endPos.getRow() > grid.length) || (startPos.getRow() < 0) || (startPos.getColumn() < 0))
 				{
 					continue loop;
 				}
 
-				for (int roW = startPos.getRow(); roW < endPos.getRow(); roW++) {
+				col = startPos.getColumn();
+				for (int z = startPos.getRow(); z < endPos.getRow(); z++) {
 					
-					sb.append(grid[roW][col]);
+					sb.append(grid[z][col]);
 					
 					if(col == endPos.getColumn())
 					{
@@ -569,9 +578,11 @@ public class CrosswordGenerator {
 				s = sb.toString().trim();
 
 				if (s.equals(Character.toString(test))) {
+					col = startPos.getColumn();
 					for (int c = startPos.getRow(); c < endPos.getRow(); c++) {
 
 						grid[c][col] = currElement.charAt(count);
+						col++;
 						count++;
 					}
 					return true;
@@ -652,7 +663,7 @@ public class CrosswordGenerator {
 
 	public static void main(String[] args) {
 		CrosswordGenerator c = new CrosswordGenerator();
-		String[] words = {"Ricky", "Josh", "Erick", "Bahar", "Brian", "Kyle"};
+		String[] words = {"brahn", "mercedes", "adam", "hogrider", "accord", "coupe"};
 		List<String > fitted = c.generate(words);
 		System.out.println(fitted);
 	}

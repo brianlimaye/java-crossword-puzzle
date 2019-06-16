@@ -11,25 +11,26 @@ public class CrossWordSolver {
 	private static final Map<String, String> lookupMap = new HashMap<String, String>();
 
 	public static void main(String[] args) {
+		
 		CrosswordGenerator cw = new CrosswordGenerator();
 		CrossWordSolver cs = new CrossWordSolver();
 		List<String> list = new ArrayList<String>();
 		String[] fittedWords = new String[list.size()];
-		String[] words = { "1234567890", "Targetaiop", "Laldig", "Doggop", "Rainbo", "Troute", "Gazebo" };
+		String[] words = { "Anaconda", "Annabelle", "Abra", "Nick", "Barry", "Cradle", "Martha"};
 
-		for (int i = 1; i <=1 ; i++) {
-			cs.clear();
+		for (int i = 1; i <=1000 ; i++) {
+			
+			cs.clearMap();
 			list = cw.generate(words);
 			
 			fittedWords = (list.toArray(new String[0]));
 			System.out.println(list);
 			char[][] grid = cw.getGrid();
 			boolean b = cs.solve(grid, fittedWords);
+			
 			if (b == false) {
-				throw new Error("Case failed!!");
+				System.out.println("Case: " + i + " failed..");
 			}
-			System.out.println();
-			System.out.println(lookupMap);
 		}
 	}
 
@@ -44,6 +45,7 @@ public class CrossWordSolver {
 			String currentWord = words[i];
 			allPositions = posOfFirstChars(grid, currentWord);
 			loop: for (int k = 0; k < allPositions.size(); k++) {
+				
 				Coordinates2D curr = allPositions.get(k);
 				boolean tryHoriz = getHoriz(curr, grid, currentWord);
 				boolean tryBackwardsHoriz = getBackwardsHoriz(curr, grid, currentWord);
@@ -273,7 +275,7 @@ public class CrossWordSolver {
 		return lookupMap;
 	}
 
-	public void clear() {
+	public void clearMap() {
 		lookupMap.clear();
 	}
 
